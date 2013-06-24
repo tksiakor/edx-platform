@@ -7,8 +7,6 @@ from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
-import xmodule.modulestore.django
-
 from xmodule.error_module import ErrorDescriptor
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore import Location
