@@ -174,4 +174,3 @@ class VideoAlphaModule(VideoAlphaFields, XModule):
 class VideoAlphaDescriptor(VideoAlphaFields, RawDescriptor):
     """Descriptor for `VideoAlphaModule`."""
     module_class = VideoAlphaModule
-    template_dir_name = "videoalpha"
