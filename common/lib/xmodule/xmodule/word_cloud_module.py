@@ -32,6 +32,7 @@ def pretty_bool(value):
 class WordCloudFields(object):
     """XFields for word cloud."""
     display_name = String(
+        display_name="Display Name",
         help="Display name for this module",
         scope=Scope.settings,
         default="Word cloud"

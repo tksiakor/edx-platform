@@ -60,6 +60,7 @@ class PeerGradingFields(object):
         scope=Scope.settings, values={"min": 0, "step": ".1"}
     )
     display_name = String(
+        display_name="Display Name",
         help="Display name for this module",
         scope=Scope.settings,
         default="Peer Grading Interface"
