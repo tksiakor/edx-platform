@@ -17,6 +17,7 @@ DEBUG = True
 import logging
 logging.disable(logging.ERROR)
 from uuid import uuid4
+import random
 
 # Use the mongo store for acceptance tests
 modulestore_options = {
@@ -77,4 +78,5 @@ MITX_FEATURES['STUB_VIDEO_FOR_TESTING'] = True
 # Include the lettuce app for acceptance testing, including the 'harvest' django-admin command
 INSTALLED_APPS += ('lettuce.django',)
 LETTUCE_APPS = ('courseware',)
+LETTUCE_SERVER_PORT = random.randint(1024, 65535)
 LETTUCE_BROWSER = 'chrome'
