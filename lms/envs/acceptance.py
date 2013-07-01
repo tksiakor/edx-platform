@@ -19,6 +19,8 @@ logging.disable(logging.ERROR)
 from uuid import uuid4
 import random
 
+file_uuid = uuid4().hex
+
 # Use the mongo store for acceptance tests
 modulestore_options = {
     'default_class': 'xmodule.raw_module.RawDescriptor',
@@ -54,14 +56,14 @@ CONTENTSTORE = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': TEST_ROOT / "db" / "test_mitx.db",
-        'TEST_NAME': TEST_ROOT / "db" / "test_mitx.db",
+        'NAME': TEST_ROOT / "db" / "test_mitx_lms.db",
+        'TEST_NAME': TEST_ROOT / "db" / "test_mitx_lms.db",
     }
 }
 
 # Set up XQueue information so that the lms will send
 # requests to a mock XQueue server running locally
-XQUEUE_PORT = 8027
+XQUEUE_PORT = random.randint(1024, 65535)
 XQUEUE_INTERFACE = {
     "url": "http://127.0.0.1:%d" % XQUEUE_PORT,
     "django_auth": {
