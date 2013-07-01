@@ -3,18 +3,13 @@ from xmodule.modulestore.exceptions import ItemNotFoundError
 from xmodule.modulestore import Location
 
 
-def get_module_info(store, location, parent_location=None, rewrite_static_links=False):
-    # parent_location seems to never be provided as this seems to only be used for docs attached to courses
-    # as metadocs such as about/overview, course_info, ...
+def get_module_info(store, location, rewrite_static_links=False):
     try:
         module = store.get_item(location)
     except ItemNotFoundError:
         # create a new one
         store.create_and_save_xmodule(location)
         module = store.get_item(location)
-        if parent_location is not None:
-            parent = store.get_item(parent_location)
-            store.update_children(parent_location, parent.children + [module.location.url()])
 
     data = module.data
     if rewrite_static_links:
