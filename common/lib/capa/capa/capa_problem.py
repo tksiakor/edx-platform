@@ -323,7 +323,7 @@ class LoncapaProblem(object):
 
             # use 'student_answers' only if it is provided, and if it might contain a file
             # submission that would not exist in the persisted "student_answers".
-            if ('filesubmission' in responder.allowed_inputfields and student_answers is not None) or not(hasattr(self, 'student_answers')):
+            if 'filesubmission' in responder.allowed_inputfields and student_answers is not None:
                 results = responder.evaluate_answers(student_answers, oldcmap)
             else:
                 results = responder.evaluate_answers(self.student_answers, oldcmap)

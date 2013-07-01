@@ -145,7 +145,6 @@ class CapaModule(CapaFields, XModule):
             self.close_date = due_date
 
         if self.seed is None:
-            print "\n\n NO SEEEDDSS!!!\n\n\n"
             self.choose_new_seed()
 
         # Need the problem location in openendedresponse to send out.  Adding

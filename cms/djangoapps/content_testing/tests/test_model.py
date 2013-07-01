@@ -94,7 +94,7 @@ class WhiteBoxTests(ContentTestTest):
             problem_location=self.problem.location,
             should_be=True)
 
-        capa = test_model._make_capa()
+        capa = test_model.capa_problem
 
         #assert no error
         assert self.script in capa.problem_text

@@ -72,23 +72,22 @@ class ContentTest(models.Model):
 
 #======= Private Methods =======#
 
-    def _make_capa(self):
+    @property
+    def capa_problem(self):
         # create a preview capa problem
-        # try:
+        return self.capa_module.lcp
+
+    @property
+    def capa_module(self):
+        # create a preview of the capa_module
         problem_descriptor = modulestore().get_item(Location(self.problem_location))
-        # except:
-        #     raise LookupError
-
-        problem_module = get_preview_module(0, problem_descriptor)
-        problem_capa = problem_module.lcp
-
-        return problem_capa
+        return get_preview_module(0, problem_descriptor)
 
     def _evaluate(self, response_dict):
         '''evaluate the problem with the response_dict and return the correct/incorrect result'''
 
         # instantiate the capa problem so it can grade itself
-        capa = self._make_capa()
+        capa = self.capa_problem
         grade_dict = capa.grade_answers(response_dict)
         return grade_dict
 
@@ -123,7 +122,7 @@ class ContentTest(models.Model):
         '''create child responses and input entries when created'''
 
         # create a preview capa problem
-        problem_capa = self._make_capa()
+        problem_capa = self.capa_problem
 
         # go through responder objects
         for responder_xml, responder in problem_capa.responders.iteritems():
@@ -163,7 +162,7 @@ class Response(models.Model):
 
         # see if we need to construct the object from database
         if resp_obj is None:
-            resp_obj = self._make_capa()
+            resp_obj = self.capa_response
 
         # go through inputs in this response object
         for entry in resp_obj.inputfields:
@@ -173,9 +172,10 @@ class Response(models.Model):
                 string_id=entry.attrib['id'],
                 answer=response_dict.get(entry.attrib['id'], ''))
 
-    def _make_capa(self):
+    @property
+    def capa_response(self):
         '''get the capa-response object to which this response model corresponds'''
-        parent_capa = self.content_test._make_capa()
+        parent_capa = self.content_test.capa_problem
 
         # the obvious way doesn't work :(
         # return parent_capa.responders[self.xml]

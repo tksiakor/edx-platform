@@ -137,7 +137,8 @@ urlpatterns += (
 
 urlpatterns += (
     #for content testing
-    url(r'^test_problem$', 'content_testing.views.test_problem', name='testing'),
+    url(r'^test_problem/$', 'content_testing.views.test_problem', name='testing'),
+    url(r'^create_test/$', 'content_testing.views.create_test', name='create_test'),
 )
 
 if settings.ENABLE_JASMINE:
