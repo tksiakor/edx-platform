@@ -22,7 +22,7 @@ from auth.authz import add_user_to_creator_group
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory
 
-from xmodule.modulestore import Location, draft
+from xmodule.modulestore import Location, mongo
 from xmodule.modulestore.store_utilities import clone_course
 from xmodule.modulestore.store_utilities import delete_course
 from xmodule.modulestore.django import modulestore
@@ -645,7 +645,7 @@ class ContentStoreToyCourseTest(ModuleStoreTestCase):
         vertical = module_store.get_item(Location(['i4x', 'edX', 'full',
                                          'vertical', 'vertical_66', None]), depth=1)
         # We had a bug where orphaned draft nodes caused export to fail. This is here to cover that case.
-        vertical.location = draft.as_draft(vertical.location.replace(name='no_references'))
+        vertical.location = mongo.draft.as_draft(vertical.location.replace(name='no_references'))
         draft_store.save_xmodule(vertical)
         orphan_vertical = draft_store.get_item(vertical.location)
         self.assertEqual(orphan_vertical.location.name, 'no_references')
@@ -662,7 +662,7 @@ class ContentStoreToyCourseTest(ModuleStoreTestCase):
         root_dir = path(mkdtemp_clean())
 
         # now create a private vertical (copying a draft)
-        vertical.location = draft.as_draft(Location(['i4x', 'edX', 'full', 'vertical', 'a_private_vertical', None]))
+        vertical.location = mongo.draft.as_draft(Location(['i4x', 'edX', 'full', 'vertical', 'a_private_vertical', None]))
         draft_store.save_xmodule(vertical)
         private_vertical = draft_store.get_item(vertical.location)
         vertical = None  # blank out b/c i destructively manipulated its location 2 lines above
