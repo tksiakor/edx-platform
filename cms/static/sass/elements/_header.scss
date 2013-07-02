@@ -2,7 +2,7 @@
 // ====================
 
 .wrapper-header {
-  @extend .depth3;
+  @extend .ui-depth3;
   @include box-shadow(0 1px 2px 0 $shadow-l1);
   position: relative;
   width: 100%;
@@ -22,7 +22,6 @@
   // ====================
 
   // basic layout
-
   .wrapper-l, .wrapper-r {
     background: $white;
   }
