@@ -3,6 +3,9 @@ if (!CMS.Views['Settings']) CMS.Views.Settings = {};
 CMS.Views.Settings.Details = CMS.Views.ValidatingView.extend({
     // Model class is CMS.Models.Settings.CourseDetails
     events : {
+        "input input" : "updateModel",
+        "input textarea" : "updateModel",
+        // Leaving change in as fallback for older browsers
         "change input" : "updateModel",
         "change textarea" : "updateModel",
         'click .remove-course-syllabus' : "removeSyllabus",
@@ -128,16 +131,20 @@ CMS.Views.Settings.Details = CMS.Views.ValidatingView.extend({
             this.setField(event);
             break;
         // Don't make the user reload the page to check the Youtube ID.
+        // Wait for a second to load the video, avoiding egregious AJAX calls.
         case 'course-introduction-video':
             this.clearValidationErrors();
             var previewsource = this.model.set_videosource($(event.currentTarget).val());
-            this.$el.find(".current-course-introduction-video iframe").attr("src", previewsource);
-            if (this.model.has('intro_video')) {
-                this.$el.find('.remove-course-introduction-video').show();
-            }
-            else {
-                this.$el.find('.remove-course-introduction-video').hide();
-            }
+            clearTimeout(this.videoTimer);
+            this.videoTimer = setTimeout(_.bind(function() {
+                this.$el.find(".current-course-introduction-video iframe").attr("src", previewsource);
+                if (this.model.has('intro_video')) {
+                    this.$el.find('.remove-course-introduction-video').show();
+                }
+                else {
+                    this.$el.find('.remove-course-introduction-video').hide();
+                }
+            }, this), 1000);
             break;
         default: // Everything else is handled by datepickers and CodeMirror.
             break;
