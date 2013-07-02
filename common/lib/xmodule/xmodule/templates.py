@@ -1,14 +1,14 @@
 """
 This module handles loading xmodule templates
-These templates are used by the CMS to provide baseline content that
-gives sample field values when adding new modules to a course.
+These templates are used by the CMS to provide content that overrides xmodule defaults for
+samples.
 
-`Template`s are defined in x_module. They contain 3 attributes:
-    metadata: A dictionary with the template metadata
-    data: A JSON value that defines the template content
+``Template``s are defined in x_module. They contain 2 attributes:
+    :metadata: A dictionary with the template metadata
+    :data: A JSON value that defines the template content
 """
 
-# TODO should this move to cms since it's really only for module crud?
+# should this move to cms since it's really only for module crud?
 import logging
 
 from collections import defaultdict

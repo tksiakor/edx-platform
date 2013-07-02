@@ -661,13 +661,13 @@ class ContentStoreToyCourseTest(ModuleStoreTestCase):
 
         root_dir = path(mkdtemp_clean())
 
-        # now create a private vertical (copying a draft)
+        # now create a new/different private (draft only) vertical
         vertical.location = mongo.draft.as_draft(Location(['i4x', 'edX', 'full', 'vertical', 'a_private_vertical', None]))
         draft_store.save_xmodule(vertical)
         private_vertical = draft_store.get_item(vertical.location)
         vertical = None  # blank out b/c i destructively manipulated its location 2 lines above
 
-        # add private to list of children
+        # add the new private to list of children
         sequential = module_store.get_item(Location(['i4x', 'edX', 'full',
                                            'sequential', 'Administrivia_and_Circuit_Elements', None]))
         private_location_no_draft = private_vertical.location.replace(revision=None)
