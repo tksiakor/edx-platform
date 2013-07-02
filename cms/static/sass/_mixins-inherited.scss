@@ -105,18 +105,6 @@
 
 // ====================
 
-// inherited - ui
-.window {
-  @include clearfix();
-  @include border-radius(3px);
-  @include box-shadow(0 1px 1px $shadow-l1);
-  margin-bottom: $baseline;
-  border: 1px solid $gray-l2;
-  background: $white;
-}
-
-// ====================
-
 // mixins - grandfathered
 @mixin button {
   @include font-size(14);
