@@ -95,8 +95,7 @@ CMS.Views.Settings.Advanced = CMS.Views.ValidatingView.extend({
                     }
                 }
                 if (JSONValue !== undefined) {
-                    self.clearValidationErrors();
-                    self.model.set(key, JSONValue, {validate: true});
+                    self.model.set(key, JSONValue);
                 }
             }
         });

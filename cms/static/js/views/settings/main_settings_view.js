@@ -92,7 +92,6 @@ CMS.Views.Settings.Details = CMS.Views.ValidatingView.extend({
         var timefield = $(div).find("input:.time");
         var cachethis = this;
         var setfield = function () {
-            cachethis.clearValidationErrors();
             var date = datefield.datepicker('getDate');
             if (date) {
                 var time = timefield.timepicker("getSecondsFromMidnight");
@@ -101,6 +100,7 @@ CMS.Views.Settings.Details = CMS.Views.ValidatingView.extend({
                 }
                 var newVal = new Date(date.getTime() + time * 1000);
                 if (!cacheModel.has(fieldName) || cacheModel.get(fieldName).getTime() !== newVal.getTime()) {
+                    cachethis.clearValidationErrors();
                     cachethis.setAndValidate(fieldName, newVal);
                 }
             }
@@ -108,6 +108,7 @@ CMS.Views.Settings.Details = CMS.Views.ValidatingView.extend({
                 // Clear date (note that this clears the time as well, as date and time are linked).
                 // Note also that the validation logic prevents us from clearing the start date
                 // (start date is required by the back end).
+                cachethis.clearValidationErrors();
                 cachethis.setAndValidate(fieldName, null);
             }
         };
