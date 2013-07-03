@@ -18,7 +18,7 @@ class XModuleCourseFactory(Factory):
     def _create(cls, target_class, **kwargs):
 
         org = kwargs.pop('org', None)
-        number = kwargs.pop('number', None)
+        number = kwargs.pop('number', kwargs.pop('course', None))
         display_name = kwargs.pop('display_name', None)
         location = Location('i4x', org, number, 'course', Location.clean(display_name))
 
