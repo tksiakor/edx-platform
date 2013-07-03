@@ -228,6 +228,13 @@ def shows_captions(step, show_captions):
         assert world.is_css_not_present('.video.closed')
 
 
+@step('the save button is disabled$')
+def save_button_disabled(step):
+    button_css = '.action-save'
+    disabled = 'is-disabled'
+    assert world.css_find(button_css)[0].has_class(disabled)
+
+
 def type_in_codemirror(index, text):
     world.css_click(".CodeMirror", index=index)
     g = world.css_find("div.CodeMirror.CodeMirror-focused > div > textarea")
