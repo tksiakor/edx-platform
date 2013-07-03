@@ -930,8 +930,8 @@ class TestCourseGrader(TestSubmittingProblems):
         # Get both parts of the first problem correct
         self.reset_question_answer('H1P1')
         self.submit_question_answer('H1P1', {'2_1': 'Correct', '2_2': 'Correct'})
-        self.check_grade_percent(0.13)
         self.assertEqual(earned_hw_scores(), [2.0, 0, 0])
+        self.check_grade_percent(0.13)
         self.assertEqual(score_for_hw('Homework1'), [2.0, 0.0])
 
         # This problem is shown in an ABTest
