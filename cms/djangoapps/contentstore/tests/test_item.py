@@ -14,12 +14,13 @@ class DeleteItem(CourseTestCase):
 
     def testDeleteStaticPage(self):
         # Add static tab
-        data = {
+        data = json.dumps({
             'parent_location': 'i4x://mitX/333/course/Dummy_Course',
             'category': 'static_tab'
-        }
+        })
 
-        resp = self.client.post(reverse('create_item'), data)
+        resp = self.client.post(reverse('create_item'), data,
+            content_type="application/json")
         self.assertEqual(resp.status_code, 200)
 
         # Now delete it. There was a bug that the delete was failing (static tabs do not exist in draft modulestore).
@@ -47,10 +48,12 @@ class TestCreateItem(CourseTestCase):
         display_name = 'Nicely created'
         resp = self.client.post(
             reverse('create_item'),
-            {'parent_location': self.course_location.url(),
-             'display_name': display_name,
-             'category': 'chapter'
-            }
+            json.dumps({
+                'parent_location': self.course_location.url(),
+                'display_name': display_name,
+                'category': 'chapter'
+            }),
+            content_type="application/json"
         )
         self.assertEqual(resp.status_code, 200)
 
@@ -69,9 +72,11 @@ class TestCreateItem(CourseTestCase):
         # use default display name
         resp = self.client.post(
             reverse('create_item'),
-            {'parent_location': chap_location,
-             'category': 'vertical'
-            }
+            json.dumps({
+                'parent_location': chap_location,
+                'category': 'vertical'
+            }),
+            content_type="application/json"
         )
         self.assertEqual(resp.status_code, 200)
 
@@ -81,10 +86,12 @@ class TestCreateItem(CourseTestCase):
         template_id = 'multiplechoice.yaml'
         resp = self.client.post(
             reverse('create_item'),
-            {'parent_location': vert_location,
-             'category': 'problem',
-             'boilerplate': template_id
-            }
+            json.dumps({
+                'parent_location': vert_location,
+                'category': 'problem',
+                'boilerplate': template_id
+            }),
+            content_type="application/json"
         )
         self.assertEqual(resp.status_code, 200)
         prob_location = self.response_id(resp)
@@ -104,9 +111,102 @@ class TestCreateItem(CourseTestCase):
         # non-existent boilerplate: creates a default
         resp = self.client.post(
             reverse('create_item'),
-            {'parent_location': self.course_location.url(),
-             'category': 'problem',
-             'boilerplate': 'nosuchboilerplate.yaml'
-            }
+            json.dumps(
+                {'parent_location': self.course_location.url(),
+                 'category': 'problem',
+                 'boilerplate': 'nosuchboilerplate.yaml'
+                 }),
+            content_type="application/json"
         )
         self.assertEqual(resp.status_code, 200)
+
+class TestEditItem(CourseTestCase):
+    """
+    Test contentstore.views.item.save_item
+    """
+    def response_id(self, response):
+        """
+        Get the id from the response payload
+        :param response:
+        """
+        parsed = json.loads(response.content)
+        return parsed['id']
+
+    def setUp(self):
+        """ Creates the test course structure and a couple problems to 'edit'. """
+        super(TestEditItem, self).setUp()
+        # create a chapter
+        display_name = 'chapter created'
+        resp = self.client.post(
+            reverse('create_item'),
+            json.dumps(
+                {'parent_location': self.course_location.url(),
+                 'display_name': display_name,
+                 'category': 'chapter'
+                 }),
+            content_type="application/json"
+        )
+        chap_location = self.response_id(resp)
+        resp = self.client.post(
+            reverse('create_item'),
+            json.dumps(
+                {'parent_location': chap_location,
+                 'category': 'vertical'
+                }),
+            content_type="application/json"
+        )
+        vert_location = self.response_id(resp)
+        # create problem w/ boilerplate
+        template_id = 'multiplechoice.yaml'
+        resp = self.client.post(
+            reverse('create_item'),
+            json.dumps({'parent_location': vert_location,
+             'category': 'problem',
+             'boilerplate': template_id
+            }),
+            content_type="application/json"
+        )
+        self.problems = [self.response_id(resp)]
+
+    def test_delete_field(self):
+        """
+        Sending null in for a field 'deletes' it
+        """
+        self.client.post(
+            reverse('save_item'),
+            json.dumps({
+                'id': self.problems[0],
+                'metadata': {'rerandomize': 'onreset'}
+            }),
+            content_type="application/json"
+        )
+        problem = modulestore('draft').get_item(self.problems[0])
+        self.assertEqual(problem.rerandomize, 'onreset')
+        self.client.post(
+            reverse('save_item'),
+            json.dumps({
+                'id': self.problems[0],
+                'metadata': {'rerandomize': None}
+            }),
+            content_type="application/json"
+        )
+        problem = modulestore('draft').get_item(self.problems[0])
+        self.assertEqual(problem.rerandomize, 'never')
+
+
+    def test_null_field(self):
+        """
+        Sending null in for a field 'deletes' it
+        """
+        problem = modulestore('draft').get_item(self.problems[0])
+        self.assertIsNotNone(problem.markdown)
+        self.client.post(
+            reverse('save_item'),
+            json.dumps({
+                'id': self.problems[0],
+                'nullout': ['markdown']
+            }),
+            content_type="application/json"
+        )
+        problem = modulestore('draft').get_item(self.problems[0])
+        self.assertIsNone(problem.markdown)
