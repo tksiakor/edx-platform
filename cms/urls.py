@@ -152,5 +152,6 @@ if settings.MITX_FEATURES.get('ENABLE_SERVICE_STATUS'):
 urlpatterns = patterns(*urlpatterns)
 
 # Custom error pages
+#pylint: disable=C0103
 handler404 = 'contentstore.views.render_404'
 handler500 = 'contentstore.views.render_500'
