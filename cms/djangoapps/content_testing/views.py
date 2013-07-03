@@ -18,6 +18,11 @@ from mitxmako.shortcuts import render_to_response
 from contentstore.views.preview import get_preview_module, get_module_previews
 
 
+def dict_slice(d, s):
+    '''returns dict of keays that start with "s"'''
+    return {k: v for k, v in d.iteritems() if k.startswith(s)}
+
+
 @login_required
 @ensure_csrf_cookie
 def test_problem(request):
@@ -26,77 +31,74 @@ def test_problem(request):
     #authentication check?!!!
 
     #check that the problem exists
-    name = request.GET['problem']
-    org = 'test'
-    course = '123'
-    category = 'problem'
-    tag = 'i4x'
-    location = Location({"name": name,'org': org, 'course': course, 'category': category, 'tag': tag})
+    problem_location = request.GET['problem']
+    location = Location(problem_location)
+    print location
 
     try:
         problem = modulestore().get_item(location)
     except:
         return HttpResponse("Problem: "+name+"  Doesn't seems to exist :(")
 
-    #get tests for this problem
-    try:
-        tests = ContentTest.objects.filter(problem_location=unicode(location))
-        # pass these to a template to render them
+    # get all the tests
+    tests = ContentTest.objects.filter(problem_location=problem_location)
 
-    except:
-        #return blank page with option for creating a test
-        HttpResponse(u'No tests for this problem yet!')
-        # render_to_response('component.html', {
-        # 'preview': get_module_previews(problem)[0],
-        # 'editor': wrap_xmodule(problem.get_html, problem, 'xmodule_edit.html')(),
-        # })
-    print "\n\n\n"+str(tests.count())+'\n\n\n'
+    context = {
+        'csrf': csrf(request)['csrf_token'],
+        'tests': tests,
+        'location': problem_location
+    }
 
-    return new_test(request, location)
-
-
-    answer_dict = {u'i4x-test-123-problem-b0be451a94504a6aad56ed239bf4e70d_2_1': u'5381', u'i4x-test-123-problem-b0be451a94504a6aad56ed239bf4e70d_3_1':6}
-    module = get_preview_module(0, problem)
-    return_dict = module.lcp.grade_answers(answer_dict)
-    # return_dict ={}
-
-    resp_ids = []
-    for r in module.lcp.responders.values():
-        resp_ids.append(r.id)
-    return HttpResponse(str(return_dict))
+    return render_to_response('test_summary.html', context)
 
 
 def edit_test(request):
     '''edit/create more tests for a problem'''
 
 
-@login_required
-@ensure_csrf_cookie
-def new_test(request, location):
-    '''make a new test'''
+def new_test(request):
+    '''display the form for creating new test'''
 
+    # get location
+    location = request.POST['location']
+
+    # just instantiate, not placed in database
     new_test = ContentTest(problem_location=location)
     capa_module = new_test.capa_module
     capa_problem = new_test.capa_problem
 
-    # return HttpResponse(capa_module.get_html())
-
     problem = modulestore().get_item(location)
     html = capa_problem.get_html()
-    print html
-    # return HttpResponse(capa_problem.get_html())
 
-    request.META["CSRF_COOKIE_USED"] = True
     context = {
         'csrf': csrf(request)['csrf_token'],
-        'problem_html': html+str(request.COOKIES)
+        'problem_html': html
     }
 
-    return render_to_response('new_test.html', context)
+    return render_to_response('test_new.html', context)
 
-@csrf_protect
-@login_required
-@ensure_csrf_cookie
-def create_test(request):
+
+# @login_required
+# @ensure_csrf_cookie
+def save_test(request):
+    '''
+        save a test.  This can be a new test, or an update to an existing one.
+        If it is a new test, there will be no test_id in the POST data
+    '''
+
     post = request.POST
-    HttpResponse(post)
+    test_id = post.get('test_id', '')
+    response_dict = dict_slice(post,'input_')
+    should_be = post['should_be']
+
+    # if we are creating a new problem, create it
+    if test_id == '':
+        # create new ContentTest
+        pass
+    else:
+        # Fetch existing content test from database
+        # Update with new infos
+        pass
+
+    response_string = "Response Dict = " + str(response_dict) + "<br>"+"should be "+should_be+"<br>"+"Test id: "+test_id
+    return HttpResponse(response_string)

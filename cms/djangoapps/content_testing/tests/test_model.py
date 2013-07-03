@@ -63,25 +63,25 @@ def test_prime(expect,ans):
         # Make a collection of ContentTests to test
         self.pass_correct = ContentTest.objects.create(
             problem_location=self.problem.location,
-            should_be=True,
+            should_be='Correct',
             response_dict=self.response_dict_correct
         )
 
         self.pass_incorrect = ContentTest.objects.create(
             problem_location=self.problem.location,
-            should_be=False,
+            should_be='Incorrect',
             response_dict=self.response_dict_incorrect
         )
 
         self.fail_correct = ContentTest.objects.create(
             problem_location=self.problem.location,
-            should_be=False,
+            should_be='Incorrect',
             response_dict=self.response_dict_correct
         )
 
         self.fail_incorrect = ContentTest.objects.create(
             problem_location=self.problem.location,
-            should_be=True,
+            should_be='Correct',
             response_dict=self.response_dict_incorrect
         )
 
@@ -92,7 +92,7 @@ class WhiteBoxTests(ContentTestTest):
         '''test that the capa instantiation happens properly'''
         test_model = ContentTest.objects.create(
             problem_location=self.problem.location,
-            should_be=True)
+            should_be='Correct')
 
         capa = test_model.capa_problem
 
@@ -105,7 +105,7 @@ class WhiteBoxTests(ContentTestTest):
         # import nose; nose.tools.set_trace()
         test_model = ContentTest.objects.create(
             problem_location=str(self.problem.location),
-            should_be=True)
+            should_be='Correct')
 
         #check that the response created properly
         response_set = test_model.response_set
@@ -119,7 +119,7 @@ class WhiteBoxTests(ContentTestTest):
         '''tests the constructions of the response dictionary'''
         test_model = ContentTest.objects.create(
             problem_location=self.problem.location,
-            should_be=True,
+            should_be='Correct',
             response_dict=self.response_dict_correct
         )
         # test_model._create_children()

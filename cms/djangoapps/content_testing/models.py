@@ -12,9 +12,9 @@ class ContentTest(models.Model):
     # future-proof against long locations?
     problem_location = models.CharField(max_length=100, editable=False)
 
-    # whether the problem should evaluate as correct or not
+    # what the problem should evaluate as (correct or incorrect)
     # TODO: make this a dict of correctness for each input
-    should_be = models.BooleanField()
+    should_be = models.CharField(max_length=20)
 
     # the current state of the test
     verdict = models.NullBooleanField(editable=False)
@@ -31,6 +31,9 @@ class ContentTest(models.Model):
         kwargs['response_dict'] = pickle.dumps(kwargs['response_dict'])
         super(ContentTest, self).__init__(*arg, **kwargs)
 
+        #store the old dict for later comparison
+        self.old_reponse_dict = self.response_dict
+
     def save(self, *arg, **kwargs):
         '''make it automatically create children if needed upon save'''
 
@@ -42,10 +45,11 @@ class ContentTest(models.Model):
 
         # if we have a dictionary
         if hasattr(self, 'response_dict'):
-            #if it isn't pickled, update the children with the new dictionary and then pickle it.
+            #if it isn't pickled, see if it is new.  If it is, update the children
             if not(isinstance(self.response_dict, basestring)):
-                self._update_dictionary(self.response_dict)
-                self.response_dict = pickle.dumps(self.response_dict)
+                if pickle.dumps(self.response_dict) != self.old_reponse_dict:
+                    self._update_dictionary(self.response_dict)
+                    self.response_dict = pickle.dumps(self.response_dict)
 
         #save it as normal
         super(ContentTest, self).save(*arg, **kwargs)
@@ -70,8 +74,6 @@ class ContentTest(models.Model):
         self.save(dont_reset=True)
         return self.verdict
 
-#======= Private Methods =======#
-
     @property
     def capa_problem(self):
         # create a preview capa problem
@@ -82,6 +84,8 @@ class ContentTest(models.Model):
         # create a preview of the capa_module
         problem_descriptor = modulestore().get_item(Location(self.problem_location))
         return get_preview_module(0, problem_descriptor)
+
+#======= Private Methods =======#
 
     def _evaluate(self, response_dict):
         '''evaluate the problem with the response_dict and return the correct/incorrect result'''
@@ -101,7 +105,7 @@ class ContentTest(models.Model):
                 passing_all = False
                 break
 
-        if self.should_be:
+        if self.should_be.lower() == 'correct':
             return passing_all
         else:
             return not(passing_all)

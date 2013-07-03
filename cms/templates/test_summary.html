@@ -1,0 +1,36 @@
+<%inherit file="base.html" />
+<%namespace name='static' file='static_content.html'/>
+
+<!-- TODO decode course # from context_course into title -->
+<%block name="title">Create A Problem Test</%block>
+
+
+##<%block name="jsextra">
+  ## <script type="text/javascript" src="${static.url('js/template_loader.js')}"></script>
+  ## <script type="text/javascript" src="${static.url('js/models/course_info.js')}"></script>
+  ## <script type="text/javascript" src="${static.url('js/models/module_info.js')}"></script>
+  ## <script type="text/javascript" src="${static.url('js/views/course_info_edit.js')}"></script>
+  ## <link rel="stylesheet" type="text/css" href="${static.url('js/vendor/timepicker/jquery.timepicker.css')}" />
+  ## <script src="${static.url('js/vendor/timepicker/jquery.timepicker.js')}"></script>
+  ## <script src="${static.url('js/vendor/timepicker/datepair.js')}"></script>
+  ## <script src="${static.url('js/vendor/date.js')}"></script>
+
+  ## my additions
+  ##<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script> 
+  ##<script src="http://malsup.github.com/jquery.form.js"></script> 
+
+##</%block>
+
+<%block name='content'>
+% if tests.count() > 0:
+  % for test in tests.all():
+    test.get_html()
+  % endfor
+% else:
+  <form method="post" action="/new_test/">
+    <input type="hidden" name="csrfmiddlewaretoken" value=${csrf}>
+    <input type="hidden" name="location" value=${location}>
+    <input type="submit" name="submit" value="Create a Test">
+  </form>
+%endif
+</%block>
