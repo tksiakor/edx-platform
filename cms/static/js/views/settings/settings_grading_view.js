@@ -118,7 +118,7 @@ CMS.Views.Settings.Grading = CMS.Views.ValidatingView.extend({
 
         default:
             this.setField(event);
-        break;
+            break;
         }
     },
 
