@@ -49,7 +49,7 @@ def run_system(system, args):
 
 @task
 @consume_args
-@needs('pavements.prereqs.install_prereqs', 'predjango', 'watch_sass')
+@needs('pavements.prereqs.install_prereqs', 'predjango', 'pavements.assets.assets_watch_all')
 def lms(args):
     """
     Start the lms locally with the specified environment (defaults to dev).

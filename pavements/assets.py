@@ -1,227 +1,191 @@
 import os
 import sys
-from paver.easy import task, needs, consume_args, no_help
-from subprocess import call
+import platform
+import resource
+import glob2
+from paver.easy import task, needs, consume_args, cmdopts, no_help
+from subprocess import call, Popen
 
 from pavements.config import config
 from pavements.helpers import *
 
-THEME_NAME = ENV_TOKENS.get('THEME_NAME', False)
+THEME_NAME = os.environ.get('THEME_NAME', False)
 USE_CUSTOM_THEME = THEME_NAME and not is_empty(THEME_NAME)
 if USE_CUSTOM_THEME:
-    THEME_ROOT = os.path.join(ENV_ROOT, "themes", THEME_NAME)
+    THEME_ROOT = os.path.join(config['REPO_ROOT'], "themes", THEME_NAME)
     THEME_SASS = os.path.join(THEME_ROOT, "static", "sass")
 
 
-def xmodule_cmd(watch=false, debug=false):
-    xmodule_cmd = 'xmodule_assets common/static/xmodule'
+def xmodule_cmd(watch=False, debug=False):
+    xmodule_cmd_string = 'xmodule_assets common/static/xmodule'
     if watch:
-        "watchmedo shell-command " +
-        "--patterns='*.js;*.coffee;*.sass;*.scss;*.css' " +
-        "--recursive " +
-        "--command='#{xmodule_cmd}' " +
-        "common/lib/xmodule"
+        return ("watchmedo shell-command " +
+                "--patterns='*.js;*.coffee;*.sass;*.scss;*.css' " +
+                "--recursive " +
+                "--command='%s' " +
+                "common/lib/xmodule") % xmodule_cmd_string
     else:
-        xmodule_cmd
+        return xmodule_cmd_string
+
+MINIMAL_DARWIN_NOFILE_LIMIT = 8000
+
+def coffee_cmd(watch=False, debug=False):
+    if watch and platform.system() == 'Darwin':
+        available_files = resource.getrlimit(resource.RLIMIT_NOFILE)[0]
+        if available_files < MINIMAL_DARWIN_NOFILE_LIMIT:
+            resource.setrlimit(resource.RLIMIT_NOFILE, MINIMAL_DARWIN_NOFILE_LIMIT)
+    return 'node_modules/.bin/coffee --compile %s .' % ('--watch' if watch else '')
 
 
-def coffee_cmd(watch=false, debug=false):
-    if watch:
-        # On OSx, coffee fails with EMFILE when
-        # trying to watch all of our coffee files at the same
-        # time.
-        #
-        # Ref: https://github.com/joyent/node/issues/2479
-        #
-        # Rather than watching all of the directories in one command
-        # watch each static files subdirectory separately
-        cmds = []
-        for coffee_folder in ['lms/static/coffee', 'cms/static/coffee', 'common/static/coffee', 'common/static/xmodule']:
-            cmds.append("node_modules/.bin/coffee --watch --compile %s") % coffee_folder
-    else:
-        'node_modules/.bin/coffee --compile */static'
-
-
-def sass_cmd(watch=false, debug=false):
+def sass_cmd(watch=False, debug=False):
     sass_load_paths = ["./common/static/sass"]
     sass_watch_paths = ["*/static"]
     if USE_CUSTOM_THEME:
         sass_load_paths.append(THEME_SASS)
         sass_watch_paths.append(THEME_SASS)
 
-    print "sass %s" % "debug ? '--debug-info' : '--style compressed'" +
-            "--load-path #{sass_load_paths.join(' ')} " +
+    return ("sass %s " % ('--debug-info' if debug else '--style compressed') +
+            "--load-path %s " % (' '.join(sass_load_paths)) +
             "--require ./common/static/sass/bourbon/lib/bourbon.rb " +
-            "%s %s" %("watch ? '--watch' : '--update'", "sass_watch_paths.join(' ')")
+            "%s %s") % ('--watch' if watch else '--update', ' '.join(sass_watch_paths))
 
 
-
-desc "Compile all assets"
-multitask :assets => 'assets:all'
-
+'''
 @task
-@needs('pavements.assets.all')
-def assets():
-    """Compile all assets"""
-    pass
-
-
-@task
-def debug():
-    """Compile all assets in debug mode"""
-    pass
-
-
-@task
-@consume_args
-def preprocess(system="lms", env="dev"):
+@cmdopts([
+    ('system=', 's', "Subsystem (lms, cms) that we're processesing"),
+    ('env=', 'e', "Environment (dev, test, etc) that we're processesing")
+])
+def preprocess(opts):
     """Preprocess all templatized static asset files"""
-    ok, status = os.system(django_admin(system, env, "preprocess_assets")) #?
-    if not ok:
+    if not hasattr(opts, 'system'):
+        system = 'lms'
+    else:
+        system = opts.system
+
+    if not hasattr(opts, 'env'):
+        env = 'dev'
+    else:
+        env = opts.env
+
+    status = os.system(django_admin(system, env, "preprocess_assets"))
+    if status > 0:
         print "asset preprocessing failed!"
         sys.exit()
 
+'''
+
 
 @task
-@needs('pavements.assets._watch')
-def watch():
-    """Watch all assets for changes and automatically recompile"""
-    print "Press ENTER to terminate"
-    
+def preprocess():
+    """Preprocess all templatized static asset files"""
+    system = 'lms'
+    env = 'dev'
 
+    status = os.system(django_admin(system, env, "preprocess_assets"))
+    if status > 0:
+        print "asset preprocessing failed!"
+        sys.exit()
 
-pairs = {"xmodule": "install_python_prereqs", "coffee": "install_node_prereqs", "sass": ["install_ruby_prereqs", "preprocess"]}:
-for asset_type, prereq_tasks in pars.items():
-    @task
+pairs = {"xmodule": "install_python_prereqs", "coffee": "install_node_prereqs", "sass": ["install_ruby_prereqs", "preprocess"]}
+
+#############################
+#
+# Bare assets tasks
+#
+##############################
+
 
 @task
 @needs("pavements.prereqs.install_python_prereqs")
-def xmodule():
+def assets_xmodule():
     """Compile all xmodule assets"""
-    cmd = 
-
-
-
-
-
-
-
-
+    call(xmodule_cmd(watch=False, debug=False), shell=True)
 
 
 @task
-@needs('pavements.assets')
-def gather_assets(system, env):
-    ok, status = os.system("django_admin(%s, %s, 'collectstatic', '--noinput') > /dev/null") % (system, env)
-    if not ok:
+@needs("pavements.prereqs.install_coffee_prereqs")
+def assets_coffee():
+    call(coffee_cmd(watch=False, debug=False), shell=True)
+
+
+@task
+@needs("pavements.prereqs.install_ruby_prereqs")
+def assets_sass():
+    call(sass_cmd(watch=False, debug=False), shell=True)
+
+################################
+#
+# Assets debug tasks
+#
+#################################
+
+
+@task
+@needs("pavements.prereqs.install_python_prereqs")
+def assets_xmodule_debug():
+    """Compile all xmodule assets"""
+    call(xmodule_cmd(watch=False, debug=True), shell=True)
+
+
+@task
+@needs("pavements.prereqs.install_node_prereqs", "assets_coffee_clobber")
+def assets_coffee_debug():
+    call(coffee_cmd(watch=False, debug=True), shell=True)
+
+
+@task
+@needs("pavements.prereqs.install_ruby_prereqs", "preprocess")
+def assets_sass_debug():
+    call(sass_cmd(watch=False, debug=True), shell=True)
+
+#################################
+#
+# Assets watch tasks
+#
+#################################
+
+
+@task
+@needs("assets_xmodule_debug")
+def assets_xmodule_watch():
+    """Compile all xmodule assets"""
+    Popen(xmodule_cmd(watch=True, debug=True), shell=True)
+
+
+@task
+@needs("assets_coffee_debug")
+def assets_coffee_watch():
+    Popen(coffee_cmd(watch=True, debug=True), shell=True)
+
+
+@task
+@needs("assets_sass_debug")
+def assets_sass_watch():
+    Popen(sass_cmd(watch=True, debug=True), shell=True)
+
+
+@task
+@needs('assets_sass_watch', 'assets_coffee_watch', 'assets_xmodule_watch')
+def assets_watch_all():
+    pass
+
+
+@task
+def assets_coffee_clobber():
+    """ Deletes all compiled coffeescript files"""
+    path = '*/static/coffee/**/*.js'
+    for file_path in glob2.glob(path):
+        print 'deleting file {0}'.format(file_path)
+        os.remove(file_path)
+
+@task
+@needs('pavements.assets.assets_all')
+@consume_args
+def gather_assets(args):
+    system = args[0]
+    env = args[1]
+    status = os.system(django_admin(system, env, 'collectstatic', '--noinput'))
+    if status > 0:
         print "collectstatic failed!"
         sys.exit()
-
-
-
-
-
-"""
-desc "Compile all assets"
-multitask :assets => 'assets:all'
-
-namespace :assets do
-
-    desc "Compile all assets in debug mode"
-    multitask :debug
-
-    desc "Preprocess all templatized static asset files"
-    task :preprocess, [:system, :env] do |t, args|
-      args.with_defaults(:system => "lms", :env => "dev")
-      sh(django_admin(args.system, args.env, "preprocess_assets")) do |ok, status|
-        abort "asset preprocessing failed!" if !ok
-      end
-    end
-
-    desc "Watch all assets for changes and automatically recompile"
-    task :watch => 'assets:_watch' do
-        puts "Press ENTER to terminate".red
-        $stdin.gets
-    end
-
-    {:xmodule => :install_python_prereqs,
-     :coffee => :install_node_prereqs,
-     :sass => [:install_ruby_prereqs, :preprocess]}.each_pair do |asset_type, prereq_tasks|
-        desc "Compile all #{asset_type} assets"
-        task asset_type => prereq_tasks do
-            cmd = send(asset_type.to_s + "_cmd", watch=false, debug=false)
-            if cmd.kind_of?(Array)
-                cmd.each {|c| sh(c)}
-            else
-                sh(cmd)
-            end
-        end
-
-        multitask :all => asset_type
-        multitask :debug => "assets:#{asset_type}:debug"
-        multitask :_watch => "assets:#{asset_type}:_watch"
-
-        namespace asset_type do
-            desc "Compile all #{asset_type} assets in debug mode"
-            task :debug => prereq_tasks do
-                cmd = send(asset_type.to_s + "_cmd", watch=false, debug=true)
-                sh(cmd)
-            end
-
-            desc "Watch all #{asset_type} assets and compile on change"
-            task :watch => "assets:#{asset_type}:_watch" do
-                puts "Press ENTER to terminate".red
-                $stdin.gets
-            end
-
-            task :_watch => prereq_tasks do
-                cmd = send(asset_type.to_s + "_cmd", watch=true, debug=true)
-                if cmd.kind_of?(Array)
-                    cmd.each {|c| background_process(c)}
-                else
-                    background_process(cmd)
-                end
-            end
-        end
-    end
-
-    multitask :sass => 'assets:xmodule'
-    namespace :sass do
-        # In watch mode, sass doesn't immediately compile out of date files,
-        # so force a recompile first
-        # Also force xmodule files to be generated before we start watching anything
-        task :_watch => ['assets:sass:debug', 'assets:xmodule']
-        multitask :debug => 'assets:xmodule:debug'
-    end
-
-    multitask :coffee => 'assets:xmodule'
-    namespace :coffee do
-        # Force xmodule files to be generated before we start watching anything
-        task :_watch => 'assets:xmodule'
-        multitask :debug => 'assets:xmodule:debug'
-    end
-end
-
-# This task does the real heavy lifting to gather all of the static
-# assets. We want people to call it via the wrapper below, so we
-# don't provide a description so that it won't show up in rake -T.
-task :gather_assets, [:system, :env] => :assets do |t, args|
-    sh("#{django_admin(args.system, args.env, 'collectstatic', '--noinput')} > /dev/null") do |ok, status|
-        if !ok
-            abort "collectstatic failed!"
-        end
-    end
-end
-
-[:lms, :cms].each do |system|
-    # Per environment tasks
-    environments(system).each do |env|
-        # This task wraps the one above, since we need the system and
-        # env arguments to be passed to all dependent tasks.
-        desc "Compile coffeescript and sass, and then run collectstatic in the specified environment"
-        task "#{system}:gather_assets:#{env}" do
-          Rake::Task[:gather_assets].invoke(system, env)
-        end
-    end
-end
-"""
