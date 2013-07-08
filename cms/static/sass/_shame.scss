@@ -1,3 +1,23 @@
 // studio - shame
 // // shame file - used for any bad-form/orphaned scss that knowingly violate edX FED architecture/standards (see - http://csswizardry.com/2013/04/shame-css/)
 // ====================
+
+// view - dashboard
+body.dashboard {
+
+  // elements - authorship controls
+  .wrapper-authorshiprights {
+
+    .ui-toggle-control {
+      // needed to override general a element transition properties - need to fix.
+      transition-duration: 0.25s;
+      transition-timing-function: ease-in-out;
+    }
+
+    .icon-remove-sign {
+      // needed to override general a element transition properties - need to fix.
+      transition-duration: 0.25s;
+      transition-timing-function: ease-in-out;
+    }
+  }
+}
