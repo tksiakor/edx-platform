@@ -4,8 +4,10 @@ from django.core.urlresolvers import reverse, NoReverseMatch
 from track.models import TrackingLog
 from track.views import user_track
 from nose.plugins.skip import SkipTest
+from django.test.utils import override_settings
 
 
+@override_settings(MITX_FEATURES={'ENABLE_SQL_TRACKING_LOGS': True})
 class TrackingTest(TestCase):
     """
     Tests that tracking logs correctly handle events

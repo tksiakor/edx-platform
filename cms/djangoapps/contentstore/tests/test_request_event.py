@@ -2,8 +2,9 @@
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from contentstore.views.requests import event as cms_user_track
+from django.test.utils import override_settings
 
-
+@override_settings(MITX_FEATURES={'ENABLE_SQL_TRACKING_LOGS': True})
 class CMSLogTest(TestCase):
     """
     Tests that request to logs from CMS return 204s
