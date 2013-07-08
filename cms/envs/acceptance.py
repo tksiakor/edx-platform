@@ -18,6 +18,12 @@ import logging
 logging.disable(logging.ERROR)
 from uuid import uuid4
 import random
+import os
+
+
+def seed():
+    return os.getppid()
+
 
 MODULESTORE_OPTIONS = {
     'default_class': 'xmodule.raw_module.RawDescriptor',
@@ -63,8 +69,8 @@ CONTENTSTORE = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': TEST_ROOT / "db" / "test_mitx_cms.db",
-        'TEST_NAME': TEST_ROOT / "db" / "test_mitx_cms.db",
+        'NAME': TEST_ROOT / "db" / "test_mitx_cms_%s.db" % seed(),
+        'TEST_NAME': TEST_ROOT / "db" / "test_mitx_cms_%s.db" % seed(),
     }
 }
 

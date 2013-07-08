@@ -18,8 +18,13 @@ import logging
 logging.disable(logging.ERROR)
 from uuid import uuid4
 import random
+import os
 
 file_uuid = uuid4().hex
+
+
+def seed():
+    return os.getppid()
 
 # Use the mongo store for acceptance tests
 modulestore_options = {
@@ -56,8 +61,8 @@ CONTENTSTORE = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': TEST_ROOT / "db" / "test_mitx_lms.db",
-        'TEST_NAME': TEST_ROOT / "db" / "test_mitx_lms.db",
+        'NAME': TEST_ROOT / "db" / "test_mitx_lms_%s.db" % seed(),
+        'TEST_NAME': TEST_ROOT / "db" / "test_mitx_lms_%s.db" % seed(),
     }
 }
 
