@@ -32,11 +32,11 @@ def press_the_notification_button(step, name):
     # Save was clicked if either the save notification bar is gone, or we have a error notification
     # overlaying it (expected in the case of typing Object into display_name).
     def save_clicked():
-        confirmation_dismissed = world.is_css_not_present('.is-shown.wrapper-notification-warning')
-        error_showing = world.is_css_present('.is-shown.wrapper-notification-error')
+        confirmation_dismissed = world.is_css_not_present('.is-shown.wrapper-notification-warning', wait_time=2)
+        error_showing = world.is_css_present('.is-shown.wrapper-notification-error', wait_time=2)
         return confirmation_dismissed or error_showing
 
-    assert_true(world.css_click(css, success_condition=save_clicked), 'Save button not clicked after 5 attempts.')
+    world.css_click(css, success_condition=save_clicked)
 
 
 @step(u'I edit the value of a policy key$')
@@ -113,7 +113,7 @@ def assert_policy_entries(expected_keys, expected_values):
 def get_index_of(expected_key):
     for counter in range(len(world.css_find(KEY_CSS))):
         #   Sometimes get stale reference if I hold on to the array of elements
-        key = world.css_find(KEY_CSS)[counter].value
+        key = world.css_value(KEY_CSS, index=counter)
         if key == expected_key:
             return counter
 
@@ -122,7 +122,7 @@ def get_index_of(expected_key):
 
 def get_display_name_value():
     index = get_index_of(DISPLAY_NAME_KEY)
-    return world.css_find(VALUE_CSS)[index].value
+    return world.css_value(VALUE_CSS, index=index)
 
 
 def change_display_name_value(step, new_value):
