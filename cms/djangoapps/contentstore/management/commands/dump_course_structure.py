@@ -13,7 +13,7 @@ class Command(BaseCommand):
               in a JSON format. This can be used for analytics.'''
 
     def handle(self, *args, **options):
-        if len(args) < 1 and len(args) > 3:
+        if len(args) < 2 and len(args) > 3:
             raise CommandError("dump_course_structure requires two or more arguments: <location> <outfile> |<db>|")
 
         course_id = args[0]
