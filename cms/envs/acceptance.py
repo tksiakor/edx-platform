@@ -17,7 +17,6 @@ DEBUG = True
 import logging
 logging.disable(logging.ERROR)
 from uuid import uuid4
-import random
 import os
 
 
@@ -28,8 +27,8 @@ def seed():
 MODULESTORE_OPTIONS = {
     'default_class': 'xmodule.raw_module.RawDescriptor',
     'host': 'localhost',
-    'db': 'test_xmodule',
-    'collection': 'acceptance_modulestore_%s' % uuid4().hex,
+    'db': 'acceptance_xmodule',
+    'collection': 'acceptance_modulestore_%s' % seed(),
     'fs_root': TEST_ROOT / "data",
     'render_template': 'mitxmako.shortcuts.render_to_string',
 }
@@ -53,7 +52,7 @@ CONTENTSTORE = {
     'ENGINE': 'xmodule.contentstore.mongo.MongoContentStore',
     'OPTIONS': {
         'host': 'localhost',
-        'db': 'acceptance_xcontent_%s' % uuid4().hex,
+        'db': 'acceptance_xcontent_%s' % seed(),
     },
     # allow for additional options that can be keyed on a name, e.g. 'trashcan'
     'ADDITIONAL_OPTIONS': {
