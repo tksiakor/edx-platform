@@ -16,7 +16,7 @@ DEBUG = True
 # Disable warnings for acceptance tests, to make the logs readable
 import logging
 logging.disable(logging.ERROR)
-from uuid import uuid4
+import random
 import os
 
 
